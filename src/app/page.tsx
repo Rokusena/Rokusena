@@ -8,30 +8,43 @@ const projects = [
   {
     title: "GaukDarba — AI Job Matching SaaS",
     description:
-      "AI SaaS that scrapes 5 Lithuanian job portals daily, scores listings with GPT-4o-mini, and emails personalised digests to paying subscribers. 4-stage pipeline: SQL pre-filter → keyword funnel → GPT-4o-mini scoring → email via Resend. Multi-service: Vercel (webapp + cron), Railway (Docker scraper), Supabase (DB + Auth), Stripe payments.",
+      "AI SaaS that scrapes 5 Lithuanian job portals daily, scores listings with GPT-4o-mini, and emails personalised digests to paying subscribers. 4-stage pipeline: SQL pre-filter → keyword funnel → GPT-4o-mini scoring → email via Resend. Multi-service: Vercel + Railway + Supabase + Stripe.",
     tags: ["Next.js", "TypeScript", "Python", "GPT-4o-mini", "Stripe", "Supabase", "Playwright", "Docker"],
-    link: "https://github.com/Rokusena/ScrapingDemo",
+    website: "https://gaukdarba.vercel.app",
+    github: "https://github.com/Rokusena/ScrapingDemo",
+    screenshot: "/projects/gaukdarba.png",
   },
   {
     title: "Local RAG Chatbot",
     description:
-      "Fully local RAG system — no API keys, no cloud. Document ingestion → chunking → vector embeddings → LLM generation, all on-device. REST API via FastAPI with structured I/O and per-answer source attribution.",
+      "Fully local RAG system — no API keys, no cloud. Document ingestion → chunking → vector embeddings → LLM generation, all on-device. REST API via FastAPI with per-answer source attribution.",
     tags: ["Python", "FastAPI", "LangChain", "ChromaDB", "Ollama", "Llama 3"],
-    link: "https://github.com/Rokusena/RAG",
+    github: "https://github.com/Rokusena/RAG",
+    screenshot: "/projects/rag.png",
   },
   {
     title: "Arbitrage Finder",
     description:
       "Automated scanner that cross-references casino odds with Kalshi and Polymarket prediction markets to surface arbitrage opportunities in real time.",
     tags: ["Python", "Playwright", "BeautifulSoup", "Data Pipelines"],
-    link: "https://github.com/Rokusena/Arbitrage-site",
+    github: "https://github.com/Rokusena/Arbitrage-site",
+    screenshot: "/projects/arbitrage.svg",
   },
   {
     title: "EnergyDiscount",
     description:
       "Scrapes Lithuanian retail markets in real time to find the cheapest energy drinks across stores.",
     tags: ["Python", "BeautifulSoup", "Web Scraping"],
-    link: "https://github.com/Rokusena/EnergyDiscount",
+    github: "https://github.com/Rokusena/EnergyDiscount",
+    screenshot: "/projects/energydiscount.png",
+  },
+  {
+    title: "Furtiluna — Trading Robot Site",
+    description:
+      "Serverless booking platform for a trading robot service. Collects leads, manages admin-controlled time slots, and auto-books Zoom meetings with email confirmations to both parties — replacing a fully manual workflow.",
+    tags: ["Node.js", "Vercel Serverless", "PostgreSQL", "Prisma", "Zoom API", "SendGrid"],
+    github: "https://github.com/Rokusena/TradingRobotSite",
+    screenshot: "/projects/furtiluna.png",
   },
 ];
 
@@ -240,13 +253,24 @@ function Hero() {
       id="hero"
       className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 py-24 text-center"
     >
-      {/* Dot grid background */}
+      {/* Dot grid */}
       <div className="dot-bg absolute inset-0 pointer-events-none" />
-      {/* Radial gradient overlay to fade dots in center */}
+      {/* Soft dark vignette over dots */}
       <div
         className="absolute inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse 80% 70% at 50% 50%, rgba(10,15,30,0.45) 0%, #0a0f1e 72%)" }}
+      />
+      {/* Blue glow blob behind the name */}
+      <div
+        className="absolute pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(10,15,30,0.5) 0%, #0a0f1e 75%)",
+          top: "38%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "700px",
+          height: "420px",
+          background: "radial-gradient(ellipse, rgba(59,130,246,0.22) 0%, rgba(59,130,246,0.06) 45%, transparent 70%)",
+          filter: "blur(48px)",
         }}
       />
 
@@ -339,6 +363,174 @@ function Hero() {
   );
 }
 
+// ── Photo ────────────────────────────────────────────────────────────────────────
+
+function PhotoCircle() {
+  const [failed, setFailed] = useState(false);
+  return (
+    <div
+      className="relative h-48 w-48 overflow-hidden rounded-full"
+      style={{ border: "2px solid rgba(59,130,246,0.3)" }}
+    >
+      {failed ? (
+        <div
+          className="flex h-full w-full flex-col items-center justify-center"
+          style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(59,130,246,0.05) 100%)", color: "#94a3b8" }}
+        >
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="mb-2 opacity-40" aria-hidden>
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+          </svg>
+          <span className="text-xs opacity-50">photo</span>
+        </div>
+      ) : (
+        <img
+          src="/photo.jpg"
+          alt="Rokas Stasiūnas"
+          className="h-full w-full object-cover object-top"
+          onError={() => setFailed(true)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Project card ─────────────────────────────────────────────────────────────────
+
+function ProjectScreenshot({ src, title }: { src: string; title: string }) {
+  const [failed, setFailed] = useState(false);
+  return failed ? (
+    <ProjectPlaceholder />
+  ) : (
+    <img
+      src={src}
+      alt={title}
+      className="h-full w-full object-cover object-top"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
+function ProjectPlaceholder() {
+  return (
+    <div className="flex h-full w-full flex-col gap-3 p-4" style={{ backgroundColor: "#060b17" }}>
+      <div className="flex items-center gap-2">
+        <div className="h-2 w-14 rounded-full" style={{ backgroundColor: "rgba(59,130,246,0.35)" }} />
+        <div className="ml-auto flex gap-2">
+          {[10, 8, 12].map((w, i) => (
+            <div key={i} className="h-1.5 rounded-full" style={{ width: `${w * 4}px`, backgroundColor: "rgba(255,255,255,0.07)" }} />
+          ))}
+        </div>
+      </div>
+      <div className="space-y-2 mt-1">
+        <div className="h-3 w-3/4 rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.07)" }} />
+        <div className="h-2 w-1/2 rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.04)" }} />
+      </div>
+      <div className="mt-1 grid grid-cols-2 gap-2">
+        <div className="h-10 rounded-lg" style={{ backgroundColor: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.12)" }} />
+        <div className="h-10 rounded-lg" style={{ backgroundColor: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.12)" }} />
+      </div>
+      <p className="mt-auto text-center font-mono text-xs" style={{ color: "#1e3a5f" }}>
+        add screenshot → public/projects/
+      </p>
+    </div>
+  );
+}
+
+type Project = {
+  title: string;
+  description: string;
+  tags: string[];
+  github: string;
+  website?: string;
+  screenshot?: string;
+};
+
+function ProjectCard({ p }: { p: Project }) {
+  const displayUrl = p.website
+    ? p.website.replace("https://", "")
+    : p.github.replace("https://github.com/", "github.com/");
+
+  const primaryLink = p.website ?? p.github;
+
+  return (
+    <article
+      className="project-card flex flex-col overflow-hidden rounded-2xl"
+      style={{ backgroundColor: "#0d1427", border: "1px solid rgba(255,255,255,0.06)" }}
+    >
+      {/* Browser chrome */}
+      <div style={{ backgroundColor: "#060b17", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <div className="flex items-center gap-1.5 px-4 py-2.5">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#ff5f57" }} />
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#febc2e" }} />
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#28c840" }} />
+          <div className="ml-2 flex-1 truncate rounded px-2 py-0.5 font-mono text-xs" style={{ backgroundColor: "rgba(255,255,255,0.05)", color: "#475569" }}>
+            {displayUrl}
+          </div>
+          <a
+            href={primaryLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-1 shrink-0 transition-colors duration-200"
+            style={{ color: "#475569" }}
+            aria-label={`Open ${p.title}`}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#3b82f6")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#475569")}
+          >
+            <IconArrow size={14} />
+          </a>
+        </div>
+        {/* Screenshot */}
+        <div style={{ aspectRatio: "16/9", overflow: "hidden" }}>
+          {p.screenshot ? (
+            <ProjectScreenshot src={p.screenshot} title={p.title} />
+          ) : (
+            <ProjectPlaceholder />
+          )}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="mb-2 font-semibold leading-snug" style={{ color: "#f8fafc" }}>
+          {p.title}
+        </h3>
+        <p className="mb-4 grow text-sm leading-relaxed" style={{ color: "#94a3b8" }}>
+          {p.description}
+        </p>
+
+        <div className="flex items-end justify-between gap-3">
+          <div className="flex flex-wrap gap-1.5">
+            {p.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-md px-2 py-0.5 font-mono text-xs"
+                style={{ backgroundColor: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.18)", color: "#60a5fa" }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+          {p.website && (
+            <a
+              href={p.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex shrink-0 items-center gap-1 text-xs transition-colors duration-200"
+              style={{ color: "#475569" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#94a3b8")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#475569")}
+            >
+              <IconGitHub size={13} />
+              GitHub
+            </a>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
 // ── About ────────────────────────────────────────────────────────────────────────
 
 function About() {
@@ -356,22 +548,9 @@ function About() {
         </h2>
 
         <div className="grid gap-12 md:grid-cols-[200px_1fr] lg:grid-cols-[240px_1fr]">
-          {/* Photo placeholder */}
+          {/* Photo — drop your photo at public/photo.jpg to replace the placeholder */}
           <div className="flex justify-center md:justify-start">
-            <div
-              className="flex h-48 w-48 flex-col items-center justify-center rounded-full text-sm font-medium"
-              style={{
-                background: "linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(59,130,246,0.05) 100%)",
-                border: "2px solid rgba(59,130,246,0.25)",
-                color: "#94a3b8",
-              }}
-            >
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="mb-2 opacity-50" aria-hidden>
-                <circle cx="12" cy="8" r="4" />
-                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-              </svg>
-              <span className="text-xs opacity-60">photo</span>
-            </div>
+            <PhotoCircle />
           </div>
 
           {/* Bio */}
@@ -425,49 +604,7 @@ function Projects() {
 
         <div className="grid gap-5 sm:grid-cols-2">
           {projects.map((p) => (
-            <article
-              key={p.title}
-              className="project-card card-border flex flex-col rounded-2xl p-6"
-              style={{ backgroundColor: "#0d1427" }}
-            >
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <h3 className="font-semibold leading-snug" style={{ color: "#f8fafc" }}>
-                  {p.title}
-                </h3>
-                <a
-                  href={p.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-0.5 shrink-0 transition-colors duration-200"
-                  style={{ color: "#94a3b8" }}
-                  aria-label={`View ${p.title} on GitHub`}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "#3b82f6")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "#94a3b8")}
-                >
-                  <IconArrow size={18} />
-                </a>
-              </div>
-
-              <p className="mb-5 grow text-sm leading-relaxed" style={{ color: "#94a3b8" }}>
-                {p.description}
-              </p>
-
-              <div className="flex flex-wrap gap-2">
-                {p.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-md px-2.5 py-1 font-mono text-xs"
-                    style={{
-                      backgroundColor: "rgba(59,130,246,0.08)",
-                      border: "1px solid rgba(59,130,246,0.2)",
-                      color: "#60a5fa",
-                    }}
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </article>
+            <ProjectCard key={p.title} p={p} />
           ))}
         </div>
       </div>
