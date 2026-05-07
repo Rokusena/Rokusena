@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 // ── Data ────────────────────────────────────────────────────────────────────────
@@ -384,10 +385,12 @@ function PhotoCircle() {
           <span className="text-xs opacity-50">photo</span>
         </div>
       ) : (
-        <img
+        <Image
           src="/photo.jpg"
-          alt="Rokas Stasiūnas"
-          className="h-full w-full object-cover object-top"
+          alt="Rokas Stasiūnas — Full-Stack Developer & AI Engineer, Vilnius"
+          fill
+          sizes="192px"
+          style={{ objectFit: "cover", objectPosition: "top" }}
           onError={() => setFailed(true)}
         />
       )}
@@ -402,10 +405,13 @@ function ProjectScreenshot({ src, title }: { src: string; title: string }) {
   return failed ? (
     <ProjectPlaceholder />
   ) : (
-    <img
+    <Image
       src={src}
-      alt={title}
-      className="h-full w-full object-cover object-top"
+      alt={`${title} — project screenshot`}
+      fill
+      loading="lazy"
+      sizes="(max-width: 640px) 100vw, 50vw"
+      style={{ objectFit: "cover", objectPosition: "top" }}
       onError={() => setFailed(true)}
     />
   );
@@ -481,7 +487,7 @@ function ProjectCard({ p }: { p: Project }) {
           </a>
         </div>
         {/* Screenshot */}
-        <div style={{ aspectRatio: "16/9", overflow: "hidden" }}>
+        <div style={{ aspectRatio: "16/9", overflow: "hidden", position: "relative" }}>
           {p.screenshot ? (
             <ProjectScreenshot src={p.screenshot} title={p.title} />
           ) : (
@@ -682,9 +688,9 @@ function Education() {
           style={{ backgroundColor: "#0d1427" }}
         >
           <div>
-            <p className="mb-1 text-lg font-semibold" style={{ color: "#f8fafc" }}>
+            <h3 className="mb-1 text-lg font-semibold" style={{ color: "#f8fafc" }}>
               B.Eng — Artificial Intelligence Systems
-            </p>
+            </h3>
             <p className="text-sm" style={{ color: "#94a3b8" }}>
               Vilnius Tech (VGTU)
             </p>
