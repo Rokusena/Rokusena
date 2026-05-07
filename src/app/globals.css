@@ -57,3 +57,11 @@ body {
   transform: translateY(-4px);
   box-shadow: 0 8px 32px rgba(59, 130, 246, 0.12);
 }
+
+@keyframes ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+.animate-ping {
+  animation: ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}

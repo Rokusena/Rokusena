@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { createPortal } from "react-dom";
 import { useEffect, useRef, useState } from "react";
 
 // ── Data ────────────────────────────────────────────────────────────────────────
@@ -9,7 +10,7 @@ const projects = [
   {
     title: "GaukDarba — AI Job Matching SaaS",
     description:
-      "AI SaaS that scrapes 5 Lithuanian job portals daily, scores listings with GPT-4o-mini, and emails personalised digests to paying subscribers. 4-stage pipeline: SQL pre-filter → keyword funnel → GPT-4o-mini scoring → email via Resend. Multi-service: Vercel + Railway + Supabase + Stripe.",
+      "Scrapes 5 portals daily, scores every listing with a 4-stage GPT-4o-mini pipeline, and emails only the top ~5 matches to paying subscribers. Built and shipped solo — Stripe payments, Supabase auth, Railway Docker scraper, live in production.",
     tags: ["Next.js", "TypeScript", "Python", "GPT-4o-mini", "Stripe", "Supabase", "Playwright", "Docker"],
     website: "https://gaukdarba.vercel.app",
     github: "https://github.com/Rokusena/ScrapingDemo",
@@ -18,7 +19,7 @@ const projects = [
   {
     title: "Local RAG Chatbot",
     description:
-      "Fully local RAG system — no API keys, no cloud. Document ingestion → chunking → vector embeddings → LLM generation, all on-device. REST API via FastAPI with per-answer source attribution.",
+      "Zero API costs, zero cloud. Full document Q&A on-device — ingest → chunk → embed → generate, all local. Source-cited answers via FastAPI. Runs on any laptop with Ollama + Llama 3.",
     tags: ["Python", "FastAPI", "LangChain", "ChromaDB", "Ollama", "Llama 3"],
     github: "https://github.com/Rokusena/RAG",
     screenshot: "/projects/rag.png",
@@ -26,7 +27,7 @@ const projects = [
   {
     title: "Arbitrage Finder",
     description:
-      "Automated scanner that cross-references casino odds with Kalshi and Polymarket prediction markets to surface arbitrage opportunities in real time.",
+      "Monitors 3 markets simultaneously (casino odds, Kalshi, Polymarket) and surfaces profitable arbitrage windows in real time. Fully automated — no manual checking required.",
     tags: ["Python", "Playwright", "BeautifulSoup", "Data Pipelines"],
     github: "https://github.com/Rokusena/Arbitrage-site",
     screenshot: "/projects/arbitrage.svg",
@@ -34,7 +35,7 @@ const projects = [
   {
     title: "EnergyDiscount",
     description:
-      "Scrapes Lithuanian retail markets in real time to find the cheapest energy drinks across stores.",
+      "Scrapes 10+ Lithuanian retail stores daily and ranks energy drinks by price per ml. Saves users the manual price comparison across stores.",
     tags: ["Python", "BeautifulSoup", "Web Scraping"],
     github: "https://github.com/Rokusena/EnergyDiscount",
     screenshot: "/projects/energydiscount.png",
@@ -42,7 +43,7 @@ const projects = [
   {
     title: "Furtiluna — Trading Robot Site",
     description:
-      "Serverless booking platform for a trading robot service. Collects leads, manages admin-controlled time slots, and auto-books Zoom meetings with email confirmations to both parties — replacing a fully manual workflow.",
+      "Replaced a 100% manual booking workflow with serverless automation — lead intake → slot selection → Zoom meeting creation → dual email confirmation, all without human intervention.",
     tags: ["Node.js", "Vercel Serverless", "PostgreSQL", "Prisma", "Zoom API", "SendGrid"],
     github: "https://github.com/Rokusena/TradingRobotSite",
     screenshot: "/projects/furtiluna.png",
@@ -77,13 +78,39 @@ const skillGroups = [
 ];
 
 const highlights = [
-  "4 job portals scraped daily",
+  "5 portals scraped daily",
   "GPT-4o pipelines",
   "Stripe payments",
   "Docker deployments",
 ];
 
-// ── Hook ────────────────────────────────────────────────────────────────────────
+const heroStats = [
+  { value: 5,  suffix: "",     label: "portals scraped daily" },
+  { value: 1,  suffix: "",     label: "paid SaaS live"        },
+  { value: 5,  suffix: "",     label: "apps shipped"          },
+  { value: 8,  suffix: "+/10", label: "Alva Labs score"       },
+];
+
+// ── Hooks ────────────────────────────────────────────────────────────────────────
+
+function useCounter(target: number, duration = 1400, delay = 600) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const start = Date.now();
+      const tick = () => {
+        const p = Math.min((Date.now() - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        setCount(Math.floor(eased * target));
+        if (p < 1) requestAnimationFrame(tick);
+        else setCount(target);
+      };
+      requestAnimationFrame(tick);
+    }, delay);
+    return () => clearTimeout(t);
+  }, [target, duration, delay]);
+  return count;
+}
 
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLElement>(null);
@@ -168,6 +195,42 @@ function IconLinkedIn({ size = 20 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
     </svg>
+  );
+}
+
+// ── Available badge ──────────────────────────────────────────────────────────────
+
+function AvailableBadge() {
+  return (
+    <div
+      className="mb-7 flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium"
+      style={{ backgroundColor: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.22)", color: "#4ade80" }}
+    >
+      <span className="relative flex h-2 w-2">
+        <span
+          className="absolute inline-flex h-full w-full rounded-full animate-ping"
+          style={{ backgroundColor: "#4ade80", opacity: 0.6 }}
+        />
+        <span className="relative inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: "#4ade80" }} />
+      </span>
+      Available for work
+    </div>
+  );
+}
+
+// ── Stat counter ─────────────────────────────────────────────────────────────────
+
+function StatCounter({ value, suffix, label }: { value: number; suffix: string; label: string }) {
+  const count = useCounter(value, 1200, 900);
+  return (
+    <div className="flex flex-col items-center gap-1 px-6 py-4">
+      <span className="text-3xl font-extrabold tabular-nums" style={{ color: "#f8fafc" }}>
+        {count}{suffix}
+      </span>
+      <span className="text-center text-xs leading-tight" style={{ color: "#94a3b8" }}>
+        {label}
+      </span>
+    </div>
   );
 }
 
@@ -276,6 +339,8 @@ function Hero() {
       />
 
       <div className="relative z-10 flex flex-col items-center">
+        <AvailableBadge />
+
         <p className="mb-4 font-mono text-sm tracking-widest uppercase" style={{ color: "#3b82f6" }}>
           Full-Stack Developer & AI Engineer
         </p>
@@ -287,13 +352,14 @@ function Hero() {
           Rokas Stasiūnas
         </h1>
 
-        <div className="mb-4 flex items-center gap-2 text-sm" style={{ color: "#94a3b8" }}>
+        <div className="mb-5 flex items-center gap-2 text-sm" style={{ color: "#94a3b8" }}>
           <IconPin size={14} />
           <span>Vilnius, Lithuania</span>
         </div>
 
-        <p className="mb-10 max-w-md text-xl font-medium" style={{ color: "#94a3b8" }}>
-          I build AI-powered products that ship.
+        <p className="mb-10 max-w-lg text-xl font-medium" style={{ color: "#94a3b8" }}>
+          Student turned builder — 5 apps shipped, 1 paying SaaS,
+          GPT-4o pipelines running in production.
         </p>
 
         <div className="flex flex-wrap justify-center gap-3">
@@ -359,8 +425,60 @@ function Hero() {
             Email Me
           </a>
         </div>
+
+        {/* Stats bar */}
+        <div
+          className="mt-16 grid w-full max-w-xl grid-cols-2 sm:grid-cols-4"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
+        >
+          {heroStats.map((s) => (
+            <StatCounter key={s.label} value={s.value} suffix={s.suffix} label={s.label} />
+          ))}
+        </div>
       </div>
     </section>
+  );
+}
+
+// ── Lightbox ─────────────────────────────────────────────────────────────────────
+
+function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+  useEffect(() => {
+    const handle = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handle);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handle);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div
+      className="fixed inset-0 flex items-center justify-center p-4 sm:p-8"
+      style={{ backgroundColor: "rgba(0,0,0,0.92)", zIndex: 9999 }}
+      onClick={onClose}
+    >
+      {/* Close button — large touch target */}
+      <button
+        onClick={onClose}
+        className="absolute right-4 top-4 flex items-center justify-center rounded-full transition-colors duration-150"
+        style={{ width: 44, height: 44, backgroundColor: "rgba(255,255,255,0.12)", color: "#f8fafc" }}
+        aria-label="Close image"
+      >
+        <IconClose size={22} />
+      </button>
+
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={alt}
+        className="rounded-xl shadow-2xl"
+        style={{ maxWidth: "min(92vw, 1200px)", maxHeight: "85vh", width: "auto", height: "auto", objectFit: "contain" }}
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>,
+    document.body
   );
 }
 
@@ -452,7 +570,7 @@ type Project = {
   screenshot?: string;
 };
 
-function ProjectCard({ p }: { p: Project }) {
+function ProjectCard({ p, index = 0, sectionVisible = true, onImageClick }: { p: Project; index?: number; sectionVisible?: boolean; onImageClick?: (src: string, alt: string) => void }) {
   const displayUrl = p.website
     ? p.website.replace("https://", "")
     : p.github.replace("https://github.com/", "github.com/");
@@ -461,8 +579,8 @@ function ProjectCard({ p }: { p: Project }) {
 
   return (
     <article
-      className="project-card flex flex-col overflow-hidden rounded-2xl"
-      style={{ backgroundColor: "#0d1427", border: "1px solid rgba(255,255,255,0.06)" }}
+      className={`project-card flex flex-col overflow-hidden rounded-2xl fade-section${sectionVisible ? " visible" : ""}`}
+      style={{ backgroundColor: "#0d1427", border: "1px solid rgba(255,255,255,0.06)", transitionDelay: `${index * 0.1}s` }}
     >
       {/* Browser chrome */}
       <div style={{ backgroundColor: "#060b17", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
@@ -486,12 +604,33 @@ function ProjectCard({ p }: { p: Project }) {
             <IconArrow size={14} />
           </a>
         </div>
-        {/* Screenshot */}
-        <div style={{ aspectRatio: "16/9", overflow: "hidden", position: "relative" }}>
+        {/* Screenshot — click to enlarge */}
+        <div
+          style={{ aspectRatio: "16/9", overflow: "hidden", position: "relative", cursor: p.screenshot ? "zoom-in" : "default" }}
+          onClick={() => p.screenshot && onImageClick?.(p.screenshot, p.title)}
+          role={p.screenshot ? "button" : undefined}
+          aria-label={p.screenshot ? `View ${p.title} screenshot full size` : undefined}
+        >
           {p.screenshot ? (
             <ProjectScreenshot src={p.screenshot} title={p.title} />
           ) : (
             <ProjectPlaceholder />
+          )}
+          {/* Zoom hint overlay */}
+          {p.screenshot && (
+            <div
+              className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-200"
+              style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "0")}
+            >
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+                <line x1="11" y1="8" x2="11" y2="14" />
+                <line x1="8" y1="11" x2="14" y2="11" />
+              </svg>
+            </div>
           )}
         </div>
       </div>
@@ -596,6 +735,7 @@ function About() {
 
 function Projects() {
   const { ref, visible } = useInView();
+  const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
 
   return (
     <section
@@ -609,11 +749,21 @@ function Projects() {
         </h2>
 
         <div className="grid gap-5 sm:grid-cols-2">
-          {projects.map((p) => (
-            <ProjectCard key={p.title} p={p} />
+          {projects.map((p, i) => (
+            <ProjectCard
+              key={p.title}
+              p={p}
+              index={i}
+              sectionVisible={visible}
+              onImageClick={(src, alt) => setLightbox({ src, alt })}
+            />
           ))}
         </div>
       </div>
+
+      {lightbox && (
+        <Lightbox src={lightbox.src} alt={lightbox.alt} onClose={() => setLightbox(null)} />
+      )}
     </section>
   );
 }
