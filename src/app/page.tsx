@@ -234,6 +234,55 @@ function StatCounter({ value, suffix, label }: { value: number; suffix: string; 
   );
 }
 
+// ── CopyEmailButton ──────────────────────────────────────────────────────────────
+
+const EMAIL = "StasiunasRokas@gmail.com";
+
+function CopyEmailButton({ variant }: { variant: "hero" | "contact" }) {
+  const [copied, setCopied] = useState(false);
+
+  function handleClick() {
+    navigator.clipboard.writeText(EMAIL).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  if (variant === "contact") {
+    return (
+      <button
+        onClick={handleClick}
+        className="flex items-center gap-2.5 rounded-xl px-7 py-3.5 text-sm font-semibold transition-all duration-200"
+        style={{ backgroundColor: "#3b82f6", color: "#fff" }}
+        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2563eb")}
+        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#3b82f6")}
+      >
+        <IconMail size={18} />
+        {copied ? "Copied!" : EMAIL}
+      </button>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      className="flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-all duration-200"
+      style={{ border: "1px solid rgba(255,255,255,0.12)", color: "#f8fafc", backgroundColor: "transparent" }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = "rgba(59,130,246,0.5)";
+        e.currentTarget.style.backgroundColor = "rgba(59,130,246,0.08)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+        e.currentTarget.style.backgroundColor = "transparent";
+      }}
+    >
+      <IconMail size={18} />
+      {copied ? "Copied!" : "Email Me"}
+    </button>
+  );
+}
+
 // ── Nav ─────────────────────────────────────────────────────────────────────────
 
 const navLinks = ["About", "Projects", "Skills", "Education", "Contact"];
@@ -408,22 +457,7 @@ function Hero() {
             <IconLinkedIn size={18} />
             LinkedIn
           </a>
-          <a
-            href="mailto:StasiunasRokas@gmail.com"
-            className="flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-all duration-200"
-            style={{ border: "1px solid rgba(255,255,255,0.12)", color: "#f8fafc", backgroundColor: "transparent" }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(59,130,246,0.5)";
-              e.currentTarget.style.backgroundColor = "rgba(59,130,246,0.08)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
-              e.currentTarget.style.backgroundColor = "transparent";
-            }}
-          >
-            <IconMail size={18} />
-            Email Me
-          </a>
+          <CopyEmailButton variant="hero" />
         </div>
 
         {/* Stats bar */}
@@ -892,16 +926,7 @@ function Contact() {
           </p>
 
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <a
-              href="mailto:StasiunasRokas@gmail.com"
-              className="flex items-center gap-2.5 rounded-xl px-7 py-3.5 text-sm font-semibold transition-all duration-200"
-              style={{ backgroundColor: "#3b82f6", color: "#fff" }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2563eb")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#3b82f6")}
-            >
-              <IconMail size={18} />
-              StasiunasRokas@gmail.com
-            </a>
+            <CopyEmailButton variant="contact" />
 
             <a
               href="https://github.com/Rokusena"
