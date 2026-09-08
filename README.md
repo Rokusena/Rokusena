@@ -14,7 +14,7 @@
 
 AI Systems student at Vilnius Tech and full-stack developer who ships production software. I've built and launched a paid SaaS product, a fully local RAG chatbot, and multiple automation pipelines — across Next.js frontends, Python backends, and LLM integrations.
 
-Strong systematic problem-solver — scored 8–9/10 on Alva Labs logical reasoning. Open to freelance work and internship/junior opportunities.
+Strong systematic problem-solver — scored 8/10 on Alva Labs logical reasoning. Open to freelance work.
 
 ---
 
