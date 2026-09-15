@@ -6,6 +6,9 @@ import { useEffect, useRef, useState } from "react";
 
 // ── Data ────────────────────────────────────────────────────────────────────────
 
+const ENERGY_DISCOUNT_FEED_URL =
+  "https://raw.githubusercontent.com/Rokusena/EnergyDiscount/main/deals.json";
+
 const projects = [
   {
     title: "GaukDarba — AI Job Matching SaaS",
@@ -35,10 +38,11 @@ const projects = [
   {
     title: "EnergyDiscount",
     description:
-      "Scrapes 10+ Lithuanian retail stores daily and ranks energy drinks by price per ml. Saves users the manual price comparison across stores.",
+      "Scrapes 10+ Lithuanian retail stores on a per-store schedule and ranks energy drinks by price per ml. Saves users the manual price comparison across stores.",
     tags: ["Python", "BeautifulSoup", "Web Scraping"],
     github: "https://github.com/Rokusena/EnergyDiscount",
     screenshot: "/projects/energydiscount.png",
+    discountsFeed: ENERGY_DISCOUNT_FEED_URL,
   },
   {
     title: "Furtiluna — Trading Robot Site",
@@ -177,6 +181,14 @@ function IconClose({ size = 22 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden>
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
+function IconBolt({ size = 13 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z" />
     </svg>
   );
 }
@@ -516,6 +528,200 @@ function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: ()
   );
 }
 
+// ── Discounts modal ──────────────────────────────────────────────────────────────
+
+type Deal = {
+  store: string;
+  product: string;
+  price: number | null;
+  old_price?: number;
+  discount_percent?: number;
+  price_per_liter?: number;
+  valid_until?: string;
+  scraped_at: string;
+  catalog_url?: string;
+};
+
+type DealsFeed = {
+  generated_at?: string;
+  deals: Deal[];
+};
+
+function formatRelative(iso?: string): string {
+  if (!iso) return "unknown";
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "unknown";
+  const diffMs = Date.now() - then;
+  const diffH = Math.round(diffMs / 3_600_000);
+  if (diffH < 1) return "just now";
+  if (diffH < 24) return `${diffH}h ago`;
+  const diffD = Math.round(diffH / 24);
+  return `${diffD}d ago`;
+}
+
+function formatExpiry(iso?: string): { label: string; expired: boolean } {
+  if (!iso) return { label: "unknown", expired: false };
+  const until = new Date(iso).getTime();
+  if (Number.isNaN(until)) return { label: "unknown", expired: false };
+  const diffD = Math.ceil((until - Date.now()) / 86_400_000);
+  if (diffD < 0) return { label: "expired", expired: true };
+  if (diffD === 0) return { label: "expires today", expired: false };
+  if (diffD === 1) return { label: "expires tomorrow", expired: false };
+  return { label: `expires in ${diffD}d`, expired: false };
+}
+
+function DiscountsModal({ feedUrl, title, onClose }: { feedUrl: string; title: string; onClose: () => void }) {
+  const [state, setState] = useState<"loading" | "error" | "empty" | "ready">("loading");
+  const [feed, setFeed] = useState<DealsFeed | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(feedUrl)
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
+      .then((data: DealsFeed) => {
+        if (cancelled) return;
+        if (!data?.deals?.length) setState("empty");
+        else {
+          setFeed(data);
+          setState("ready");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setState("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [feedUrl]);
+
+  useEffect(() => {
+    const handle = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handle);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handle);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  const deals = feed?.deals ?? [];
+  const sorted = [...deals].sort((a, b) => {
+    const aT = a.valid_until ? new Date(a.valid_until).getTime() : Infinity;
+    const bT = b.valid_until ? new Date(b.valid_until).getTime() : Infinity;
+    return aT - bT;
+  });
+
+  return createPortal(
+    <div
+      className="fixed inset-0 flex items-center justify-center p-4 sm:p-8"
+      style={{ backgroundColor: "rgba(0,0,0,0.75)", zIndex: 9999 }}
+      onClick={onClose}
+    >
+      <div
+        className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl"
+        style={{ backgroundColor: "#0d1427", border: "1px solid rgba(255,255,255,0.08)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          className="flex shrink-0 items-center justify-between px-5 py-4"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+        >
+          <div className="flex items-center gap-2">
+            <IconBolt size={15} />
+            <h3 className="text-sm font-semibold" style={{ color: "#f8fafc" }}>
+              {title} — Live Discounts
+            </h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="flex items-center justify-center rounded-full transition-colors duration-150"
+            style={{ width: 32, height: 32, backgroundColor: "rgba(255,255,255,0.06)", color: "#94a3b8" }}
+            aria-label="Close"
+          >
+            <IconClose size={16} />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto px-5 py-4">
+          {state === "loading" && (
+            <p className="py-8 text-center text-sm" style={{ color: "#94a3b8" }}>
+              Loading latest scrape…
+            </p>
+          )}
+
+          {state === "error" && (
+            <p className="py-8 text-center text-sm leading-relaxed" style={{ color: "#94a3b8" }}>
+              Live data isn&apos;t published yet — the scraper hasn&apos;t run against the new feed format.
+              <br />
+              Check the{" "}
+              <a href="https://github.com/Rokusena/EnergyDiscount" target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa" }}>
+                source repo
+              </a>{" "}
+              in the meantime.
+            </p>
+          )}
+
+          {state === "empty" && (
+            <p className="py-8 text-center text-sm" style={{ color: "#94a3b8" }}>
+              No active discounts right now. Each store is re-checked on its own catalog cycle.
+            </p>
+          )}
+
+          {state === "ready" && (
+            <>
+              {feed?.generated_at && (
+                <p className="mb-3 text-xs" style={{ color: "#475569" }}>
+                  Feed generated {formatRelative(feed.generated_at)}
+                </p>
+              )}
+              <ul className="flex flex-col gap-2.5">
+                {sorted.map((d, i) => {
+                  const expiry = formatExpiry(d.valid_until);
+                  return (
+                    <li
+                      key={`${d.store}-${d.product}-${i}`}
+                      className="rounded-xl p-3.5"
+                      style={{ backgroundColor: "#060b17", border: "1px solid rgba(255,255,255,0.05)" }}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-medium" style={{ color: "#f8fafc" }}>
+                            {d.product}
+                          </p>
+                          <p className="mt-0.5 text-xs" style={{ color: "#60a5fa" }}>
+                            {d.store}
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="text-sm font-semibold tabular-nums" style={{ color: "#4ade80" }}>
+                            {typeof d.price === "number" ? `€${d.price.toFixed(2)}` : "price n/a"}
+                          </p>
+                          {d.old_price != null && (
+                            <p className="text-xs tabular-nums line-through" style={{ color: "#475569" }}>
+                              €{d.old_price.toFixed(2)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" style={{ color: "#94a3b8" }}>
+                        {d.discount_percent != null && <span style={{ color: "#4ade80" }}>-{d.discount_percent}%</span>}
+                        {d.price_per_liter != null && <span>€{d.price_per_liter.toFixed(2)}/L</span>}
+                        <span>scraped {formatRelative(d.scraped_at)}</span>
+                        <span style={{ color: expiry.expired ? "#f87171" : "#94a3b8" }}>{expiry.label}</span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 // ── Photo ────────────────────────────────────────────────────────────────────────
 
 function PhotoCircle() {
@@ -602,9 +808,22 @@ type Project = {
   github: string;
   website?: string;
   screenshot?: string;
+  discountsFeed?: string;
 };
 
-function ProjectCard({ p, index = 0, sectionVisible = true, onImageClick }: { p: Project; index?: number; sectionVisible?: boolean; onImageClick?: (src: string, alt: string) => void }) {
+function ProjectCard({
+  p,
+  index = 0,
+  sectionVisible = true,
+  onImageClick,
+  onDiscountsClick,
+}: {
+  p: Project;
+  index?: number;
+  sectionVisible?: boolean;
+  onImageClick?: (src: string, alt: string) => void;
+  onDiscountsClick?: (feedUrl: string, title: string) => void;
+}) {
   const displayUrl = p.website
     ? p.website.replace("https://", "")
     : p.github.replace("https://github.com/", "github.com/");
@@ -690,20 +909,34 @@ function ProjectCard({ p, index = 0, sectionVisible = true, onImageClick }: { p:
               </span>
             ))}
           </div>
-          {p.website && (
-            <a
-              href={p.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex shrink-0 items-center gap-1 text-xs transition-colors duration-200"
-              style={{ color: "#475569" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#94a3b8")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#475569")}
-            >
-              <IconGitHub size={13} />
-              GitHub
-            </a>
-          )}
+          <div className="flex shrink-0 items-center gap-3">
+            {p.discountsFeed && (
+              <button
+                onClick={() => onDiscountsClick?.(p.discountsFeed!, p.title)}
+                className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors duration-200"
+                style={{ backgroundColor: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.22)", color: "#4ade80" }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(74,222,128,0.15)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(74,222,128,0.08)")}
+              >
+                <IconBolt size={12} />
+                Live Discounts
+              </button>
+            )}
+            {p.website && (
+              <a
+                href={p.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs transition-colors duration-200"
+                style={{ color: "#475569" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#94a3b8")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "#475569")}
+              >
+                <IconGitHub size={13} />
+                GitHub
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </article>
@@ -770,6 +1003,7 @@ function About() {
 function Projects() {
   const { ref, visible } = useInView();
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
+  const [discounts, setDiscounts] = useState<{ feedUrl: string; title: string } | null>(null);
 
   return (
     <section
@@ -790,6 +1024,7 @@ function Projects() {
               index={i}
               sectionVisible={visible}
               onImageClick={(src, alt) => setLightbox({ src, alt })}
+              onDiscountsClick={(feedUrl, title) => setDiscounts({ feedUrl, title })}
             />
           ))}
         </div>
@@ -797,6 +1032,9 @@ function Projects() {
 
       {lightbox && (
         <Lightbox src={lightbox.src} alt={lightbox.alt} onClose={() => setLightbox(null)} />
+      )}
+      {discounts && (
+        <DiscountsModal feedUrl={discounts.feedUrl} title={discounts.title} onClose={() => setDiscounts(null)} />
       )}
     </section>
   );
