@@ -604,12 +604,12 @@ function DiscountsModal({ feedUrl, title, onClose }: { feedUrl: string; title: s
     };
   }, [onClose]);
 
+  // Cheapest per litre first — that comparison is the whole point of the
+  // project. Deals whose volume couldn't be parsed sink to the bottom.
   const deals = feed?.deals ?? [];
-  const sorted = [...deals].sort((a, b) => {
-    const aT = a.valid_until ? new Date(a.valid_until).getTime() : Infinity;
-    const bT = b.valid_until ? new Date(b.valid_until).getTime() : Infinity;
-    return aT - bT;
-  });
+  const sorted = [...deals].sort(
+    (a, b) => (a.price_per_liter ?? Infinity) - (b.price_per_liter ?? Infinity)
+  );
 
   return createPortal(
     <div
@@ -1004,6 +1004,14 @@ function Projects() {
   const { ref, visible } = useInView();
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
   const [discounts, setDiscounts] = useState<{ feedUrl: string; title: string } | null>(null);
+
+  // Deep link: the deal emails link to /#deals so "check all" opens the list
+  // straight away instead of dropping people on the page to hunt for it.
+  useEffect(() => {
+    if (window.location.hash !== "#deals") return;
+    const p = projects.find((x) => x.discountsFeed);
+    if (p?.discountsFeed) setDiscounts({ feedUrl: p.discountsFeed, title: p.title });
+  }, []);
 
   return (
     <section
