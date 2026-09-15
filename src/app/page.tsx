@@ -9,6 +9,9 @@ import { useEffect, useRef, useState } from "react";
 const ENERGY_DISCOUNT_FEED_URL =
   "https://raw.githubusercontent.com/Rokusena/EnergyDiscount/main/deals.json";
 
+// Deal list is grouped in this order; any store not listed follows alphabetically.
+const STORE_ORDER = ["Rimi", "Maxima", "IKI", "Lidl", "Aibė"];
+
 const projects = [
   {
     title: "GaukDarba — AI Job Matching SaaS",
@@ -604,11 +607,18 @@ function DiscountsModal({ feedUrl, title, onClose }: { feedUrl: string; title: s
     };
   }, [onClose]);
 
-  // Cheapest per litre first — that comparison is the whole point of the
-  // project. Deals whose volume couldn't be parsed sink to the bottom.
+  // Grouped by store, in the order worth checking, with anything unlisted
+  // after them. Within a store, cheapest per litre first.
   const deals = feed?.deals ?? [];
+  const storeRank = (store: string) => {
+    const i = STORE_ORDER.indexOf(store);
+    return i === -1 ? STORE_ORDER.length : i;
+  };
   const sorted = [...deals].sort(
-    (a, b) => (a.price_per_liter ?? Infinity) - (b.price_per_liter ?? Infinity)
+    (a, b) =>
+      storeRank(a.store) - storeRank(b.store) ||
+      a.store.localeCompare(b.store) ||
+      (a.price_per_liter ?? Infinity) - (b.price_per_liter ?? Infinity)
   );
 
   return createPortal(
